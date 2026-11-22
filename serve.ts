@@ -1,7 +1,12 @@
-// A tiny static server for game/ (Node 22, standard library only), so an entry can be played
-// locally without a build step: `node serve.ts` serves game/ on http://localhost:8080.
-// It sends the MIME types a browser game needs, refuses any path outside game/, and otherwise
-// does nothing clever: this is a development convenience, not a web server for the internet.
+// Neon Bay 3D r14 — a tiny static server for game/ (Node 24, standard library
+// only), so the entry can be played locally without a build step:
+//   node serve.ts            serves game/ on http://localhost:8080
+//   node serve.ts --port 8090
+// It sends the MIME types a browser game needs, refuses any path outside
+// game/, and otherwise does nothing clever: a development convenience, not a
+// web server for the internet. The screenshots tool starts its own server on
+// a different port; this one is for humans.
+
 import { createReadStream, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { extname, join, normalize, resolve, sep } from 'node:path';
@@ -68,5 +73,7 @@ createServer((request, response) => {
   });
   createReadStream(file).pipe(response);
 }).listen(port, '127.0.0.1', () => {
-  console.log(`game/ is on http://localhost:${port}`);
+  console.log(`Neon Bay 3D — game/ is on http://localhost:${port}`);
+  console.log('Shots: ?shot=cover | ?shot=carjack | ?shot=start | ?shot=chase (add &seed=1 for the staged frames)');
+  console.log('Play: WASD drive/walk · E carjack · Q weapon wheel · R radio · G garage · C save · P photomode');
 });

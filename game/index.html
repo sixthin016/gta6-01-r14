@@ -3,17 +3,182 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Block Dodger</title>
+<link rel="icon" href="data:,">
+<title>NEON BAY 3D — open-world crime at golden hour</title>
 <style>
-  html, body { margin: 0; height: 100%; overflow: hidden; background: #11141b; }
+  :root {
+    --pink: #ff5ea8;
+    --gold: #ffd166;
+    --cyan: #4ae3ff;
+    --panel: rgba(16, 12, 32, 0.82);
+    --text: #f4f1ea;
+    --muted: #a89ec4;
+  }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #1a1030; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--text); }
   #game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
   /* Read aloud, never shown: the status line screen readers announce. */
   #status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  /* ---- HUD ---- */
+  #hud { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+  .hud-box { position: absolute; background: var(--panel); border: 1px solid rgba(255, 94, 168, 0.35); border-radius: 10px; padding: 10px 14px; backdrop-filter: blur(2px); }
+  #hud-top-left { top: 14px; left: 14px; min-width: 250px; }
+  #hud-cash { font-size: 30px; font-weight: 800; color: var(--gold); letter-spacing: 0.5px; }
+  #hud-stars { font-size: 22px; letter-spacing: 3px; margin-top: 2px; }
+  #hud-stars .star { color: #4a4468; }
+  #hud-stars .star.lit { color: #ff4a4a; text-shadow: 0 0 10px #ff4a4a; }
+  #hud-respect { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  #hud-top-right { top: 14px; right: 14px; text-align: right; min-width: 210px; }
+  #hud-clock { font-size: 26px; font-weight: 700; }
+  #hud-clock-label { font-size: 11px; color: var(--muted); letter-spacing: 2px; }
+  #hud-hurricane { font-size: 12px; color: #ffb36b; margin-top: 4px; }
+  #hud-health-row { margin-top: 6px; font-size: 12px; }
+  #hud-health-bar-wrap { height: 8px; background: #2c2547; border-radius: 4px; margin-top: 3px; overflow: hidden; }
+  #hud-health-bar { height: 100%; width: 100%; background: linear-gradient(90deg, #5eff8a, #ffd166); border-radius: 4px; }
+  #hud-bottom-left { bottom: 14px; left: 14px; min-width: 240px; }
+  #hud-mission { font-size: 15px; font-weight: 700; color: var(--gold); }
+  #hud-mission-dist { font-size: 12px; color: var(--muted); }
+  #hud-district { font-size: 12px; color: var(--cyan); margin-top: 4px; }
+  #hud-speed { font-size: 20px; font-weight: 700; margin-top: 4px; }
+  #hud-radio { bottom: 14px; left: 50%; transform: translateX(-50%); font-size: 14px; text-align: center; border-color: rgba(74, 227, 255, 0.4); }
+  #hud-radio b { color: var(--cyan); }
+  #hud-radio .radio-hint { display: block; font-size: 11px; color: var(--muted); margin-top: 2px; }
+  #hud-bottom-right { bottom: 14px; right: 14px; text-align: center; }
+  #minimap { width: 180px; height: 180px; border-radius: 8px; border: 1px solid rgba(255, 209, 102, 0.4); display: block; }
+  #minimap-label { font-size: 11px; color: var(--muted); letter-spacing: 2px; margin-top: 4px; }
+  #dispatch-board { position: absolute; top: 150px; right: 14px; width: 300px; background: var(--panel); border: 1px solid rgba(255, 74, 74, 0.5); border-radius: 10px; padding: 10px 14px; }
+  #dispatch-board h3 { margin: 0 0 6px; font-size: 13px; letter-spacing: 2px; color: #ff6b6b; }
+  #dispatch-units, #dispatch-blocks, #dispatch-halo { font-size: 12px; line-height: 1.6; color: var(--text); }
+  #dispatch-halo { color: var(--gold); font-weight: 700; }
+  #toast { position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%); background: var(--panel); border: 1px solid var(--gold); border-radius: 8px; padding: 10px 18px; font-size: 15px; font-weight: 600; opacity: 0; transition: opacity 0.3s; z-index: 8; pointer-events: none; max-width: 80vw; text-align: center; }
+  #photo-banner { display: none; position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: rgba(16, 12, 32, 0.75); border: 1px solid var(--gold); border-radius: 8px; padding: 8px 16px; font-size: 13px; letter-spacing: 3px; z-index: 9; }
+
+  /* ---- Start screen ---- */
+  #start-screen { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; background: linear-gradient(180deg, rgba(26, 10, 48, 0.55), rgba(26, 10, 48, 0.88)); }
+  .start-inner { width: min(1060px, 94vw); max-height: 94vh; overflow-y: auto; background: var(--panel); border: 1px solid rgba(255, 94, 168, 0.5); border-radius: 16px; padding: 26px 32px; }
+  .start-inner h1 { margin: 0; font-size: 44px; letter-spacing: 2px; background: linear-gradient(90deg, #ff5ea8, #ffd166, #4ae3ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .start-inner .tagline { margin: 6px 0 4px; font-size: 15px; color: var(--muted); }
+  .start-inner .story { font-size: 14px; line-height: 1.55; color: var(--text); max-width: 760px; }
+  .start-inner h2 { font-size: 15px; letter-spacing: 2px; color: var(--gold); margin: 18px 0 8px; }
+  #save-slots { display: flex; gap: 10px; }
+  .save-slot { flex: 1; text-align: left; background: #241a44; border: 1px solid #4a3f7a; border-radius: 10px; color: var(--text); padding: 12px 14px; cursor: pointer; font-family: inherit; }
+  .save-slot:hover { border-color: var(--pink); }
+  .save-slot.empty { opacity: 0.75; }
+  .save-slot .slot-num { display: block; font-size: 13px; font-weight: 700; color: var(--gold); }
+  .save-slot .slot-info { display: block; font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+  #start-missions { list-style: none; margin: 0; padding: 0; columns: 2; column-gap: 28px; }
+  #start-missions li { display: flex; gap: 8px; align-items: baseline; font-size: 13.5px; padding: 4px 0; break-inside: avoid; }
+  #start-missions li.done { color: var(--muted); text-decoration: line-through; }
+  .m-num { color: var(--gold); font-weight: 700; min-width: 22px; }
+  .m-name { font-weight: 700; }
+  .m-district { color: var(--cyan); font-size: 12px; }
+  .m-pay { margin-left: auto; color: var(--gold); font-size: 12px; }
+  .m-done { color: #5eff8a; font-size: 12px; }
+  #start-stats { display: flex; gap: 26px; flex-wrap: wrap; font-size: 13.5px; color: var(--muted); }
+  #start-stats b { color: var(--text); }
+  .start-buttons { margin-top: 20px; display: flex; gap: 12px; }
+  .btn { font-family: inherit; font-size: 16px; font-weight: 700; padding: 12px 26px; border-radius: 10px; border: none; cursor: pointer; }
+  #btn-new-game { background: linear-gradient(90deg, #ff5ea8, #ff8a5e); color: #fff; }
+  #btn-continue { background: #2c2547; color: var(--text); border: 1px solid #4a3f7a; }
+  .controls { margin-top: 16px; font-size: 12.5px; color: var(--muted); line-height: 1.8; }
+  .controls b { color: var(--text); }
+
+  /* ---- Weapon wheel ---- */
+  #weapon-wheel { display: none; position: fixed; inset: 0; z-index: 15; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: rgba(10, 6, 24, 0.45); }
+  .wheel-title { font-size: 14px; letter-spacing: 3px; color: var(--gold); margin-bottom: 8px; }
+  .wheel-item { display: flex; gap: 14px; align-items: baseline; width: 460px; background: var(--panel); border: 1px solid #4a3f7a; border-radius: 10px; padding: 12px 18px; cursor: pointer; }
+  .wheel-item.active { border-color: var(--gold); box-shadow: 0 0 18px rgba(255, 209, 102, 0.35); }
+  .w-key { font-size: 13px; font-weight: 800; color: var(--muted); border: 1px solid #4a3f7a; border-radius: 6px; padding: 2px 8px; }
+  .w-name { font-size: 18px; font-weight: 800; }
+  .w-stat { margin-left: auto; font-size: 13px; color: var(--muted); }
+
+  /* ---- Garage ---- */
+  #garage-panel { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 16; width: 520px; background: var(--panel); border: 1px solid var(--cyan); border-radius: 14px; padding: 20px 24px; }
+  .garage-title { font-size: 18px; font-weight: 800; color: var(--cyan); }
+  .garage-sub { font-size: 12.5px; color: var(--muted); margin: 6px 0 14px; line-height: 1.5; }
+  .garage-row { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid #2c2547; }
+  .g-label { font-size: 15px; font-weight: 700; width: 90px; }
+  .g-dots { color: var(--gold); letter-spacing: 3px; }
+  .g-buy { margin-left: auto; font-family: inherit; font-size: 13px; font-weight: 700; background: #2c2547; color: var(--gold); border: 1px solid var(--gold); border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+  .g-max { margin-left: auto; color: #5eff8a; font-size: 13px; font-weight: 700; }
+
+  /* ---- Paused / game over ---- */
+  #paused-screen, #game-over { display: none; position: fixed; inset: 0; z-index: 18; flex-direction: column; align-items: center; justify-content: center; background: rgba(10, 6, 24, 0.7); }
+  #paused-screen h2, #game-over h2 { font-size: 40px; margin: 0 0 10px; letter-spacing: 3px; }
+  #paused-screen p, #game-over p { color: var(--muted); font-size: 15px; }
+  #over-stats { color: var(--gold); font-size: 16px; font-weight: 700; }
 </style>
 </head>
 <body>
-<canvas id="game" aria-label="Block Dodger: move the paddle left and right to dodge falling blocks and catch coins"></canvas>
+<noscript><p style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:99;background:#1a1030">Neon Bay 3D needs JavaScript and WebGL to run.</p></noscript>
+<canvas id="game" aria-label="Neon Bay 3D: open-world crime at golden hour"></canvas>
 <p id="status" role="status" aria-live="polite"></p>
+
+<div id="hud">
+  <div class="hud-box" id="hud-top-left">
+    <div id="hud-cash">$850</div>
+    <div id="hud-stars"></div>
+    <div id="hud-respect">Nobody · 0 REP</div>
+  </div>
+  <div class="hud-box" id="hud-top-right">
+    <div id="hud-clock-label">GOLDEN HOUR</div>
+    <div id="hud-clock">17:42</div>
+    <div id="hud-hurricane">🌪 Hurricane Solana LANDFALL 06:18:42</div>
+    <div id="hud-health-row">HEALTH <span id="hud-health">100</span>
+      <div id="hud-health-bar-wrap"><div id="hud-health-bar"></div></div>
+    </div>
+  </div>
+  <div class="hud-box" id="hud-bottom-left">
+    <div id="hud-mission">1. Dockside Pickup — Harbor Docks</div>
+    <div id="hud-mission-dist"></div>
+    <div id="hud-district">Neon Row</div>
+    <div id="hud-speed">ON FOOT</div>
+  </div>
+  <div class="hud-box" id="hud-radio"><b>RADIO NEON FM</b> <span id="hud-radio-text">Neon FM — Synthwave · 112 BPM</span><span class="radio-hint">R to switch station · 3 stations · WebAudio synth, no audio files</span></div>
+  <div class="hud-box" id="hud-bottom-right">
+    <canvas id="minimap" width="180" height="180"></canvas>
+    <div id="minimap-label">NEON BAY · 5 DISTRICTS</div>
+  </div>
+  <div id="dispatch-board" style="display:none">
+    <h3>🚔 NBPD DISPATCH</h3>
+    <div id="dispatch-units">NO UNITS DEPLOYED</div>
+    <div id="dispatch-blocks">ROADBLOCKS: NONE</div>
+    <div id="dispatch-halo">HALO-1 STANDBY</div>
+  </div>
+</div>
+
+<div id="toast" role="status"></div>
+<div id="photo-banner">📷 PHOTOMODE — GOLDEN HOUR GRADE</div>
+
+<div id="weapon-wheel"></div>
+<div id="garage-panel"></div>
+
+<div id="start-screen">
+  <div class="start-inner">
+    <h1>NEON BAY 3D</h1>
+    <p class="tagline">Open-world crime at golden hour — 10 story missions · NBPD dispatch · HALO-1 · weapon wheel · carjacking · garage · respect · saves · radio</p>
+    <p class="story">The Harbor Reserve vault holds <b>$250,000</b>. Hurricane Solana makes landfall in six hours, and every crew in the city wants that money out before the storm. You are the new face on Neon Row — run the ten jobs, earn respect, and get out rich. NBPD is watching: roadblocks at 3 stars, HALO-1 in the air at 4.</p>
+    <h2>SAVE SLOTS — SAVE ANYWHERE (C)</h2>
+    <div id="save-slots"></div>
+    <h2>STORY MISSIONS — 10 JOBS</h2>
+    <ol id="start-missions"></ol>
+    <h2>STANDING</h2>
+    <div id="start-stats"></div>
+    <div class="start-buttons">
+      <button class="btn" id="btn-new-game">▶ NEW GAME</button>
+      <button class="btn" id="btn-continue">↻ CONTINUE</button>
+    </div>
+    <p class="controls">
+      <b>W A S D</b> drive / walk · <b>E</b> carjack · <b>Q</b> weapon wheel · <b>Click</b> fire ·
+      <b>R</b> radio · <b>G</b> garage · <b>C</b> quick save · <b>M</b> next job · <b>Shift</b> nitro ·
+      <b>P</b> photomode · <b>Esc</b> pause
+    </p>
+  </div>
+</div>
+
+<div id="paused-screen"><h2>PAUSED</h2><p>Neon Bay waits for no one — except right now. Press Esc to resume.</p></div>
+<div id="game-over"><h2>BUSTED</h2><p id="over-stats"></p><p>Press Enter to try again.</p></div>
+
 <script type="module" src="./src/main.js"></script>
 </body>
 </html>
