@@ -1,8 +1,8 @@
 # NEON BAY 3D: open-world crime at golden hour — 10 story missions, NBPD dispatch with roadblocks and HALO-1 air support, weapon wheel, carjacking, garage upgrades, respect ranks, saves, radio
 
-[![make.fun](https://make.fun/bounty/gta6-01/badge.svg)](https://make.fun/bounty/gta6-01)
-[![make.fun entry](https://make.fun/bounty/gta6-01/entry/sixthin016/gta6-01-r14/badge.svg)](https://make.fun/bounty/gta6-01)
-[![make.fun leaderboard](https://make.fun/bounty/gta6-01/leaderboard/badge.svg)](https://make.fun/bounty/gta6-01)
+[![make.fun · gta6-01](https://make.fun/badge/gta6-01.svg)](https://make.fun/bounty/gta6-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-01)
+[![rank](https://make.fun/badge/gta6-01/sixthin016/gta6-01-r14/rank.svg)](https://make.fun/bounty/gta6-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=gta6-01)
+[![reward](https://make.fun/badge/gta6-01/sixthin016/gta6-01-r14/reward.svg)](https://make.fun/bounty/gta6-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-01)
 
 An open-world crime game in Three.js, set in **Neon Bay** at golden hour — 17:42, the sun low over the bay, Hurricane Solana six hours from landfall, and a $250,000 Harbor Reserve vault waiting to be hit. Drive the road loop through five named districts, run ten story jobs, stay ahead of the NBPD, and get out rich before the storm.
 
